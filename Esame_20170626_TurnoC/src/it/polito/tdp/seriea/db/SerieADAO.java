@@ -12,9 +12,10 @@ import java.util.*;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
-import it.polito.tdp.seriea.model.MioGrafo;
+import it.polito.tdp.seriea.model.PunteggiePeso;
 import it.polito.tdp.seriea.model.Season;
 import it.polito.tdp.seriea.model.Team;
+import it.polito.tdp.seriea.model.Vicino;
 
 public class SerieADAO {
 
@@ -63,11 +64,15 @@ public class SerieADAO {
 		}
 	}
 
-	public void creaGrafo(MioGrafo grafo) {
-
-		String sql="select fthg as goal1, ftag as goal2, count(*) as peso\r\n " + 
-				"from matches\r\n " + 
-				"group by goal1, goal2 ";
+	public List<PunteggiePeso> getArcoePeso() {
+		
+		final String sql="select fthg as goal1, ftag as goal2, count(*) as peso " + 
+				"				from matches " + 
+				"				group by goal1, goal2 ";
+		
+		
+		List<PunteggiePeso> result= new ArrayList<>();
+		
 		
 		Connection conn = DBConnect.getConnection();
 
@@ -76,67 +81,69 @@ public class SerieADAO {
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
+
 				int goal1=res.getInt("goal1");
 				int goal2=res.getInt("goal2");
+				double peso=res.getDouble("peso");
 				
+				PunteggiePeso pp= new PunteggiePeso(goal1, goal2, peso);
+				 
+				result.add(pp);
 				
-				if(!grafo.containsVertex(goal1)) {
-					grafo.addVertex(goal1);
-				}
-				if(!grafo.containsVertex(goal2)) {
-					grafo.addVertex(goal2);
-				}
-				// orientato: creo e aggiungo l'arco
-				//grafo setta il peso
-				if(!grafo.containsEdge(goal1,goal2)) {
-					DefaultWeightedEdge edge=grafo.addEdge(goal1, goal2);
-					grafo.setEdgeWeight(edge,res.getInt("peso"));
-				}
 				
 			}
 
 			conn.close();
-	
+			return result;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		
+			return null;
 		}
-		
 	}
 
-	public Map<String,Integer> getPartiteGoalSelezionato(Integer goalSelezionato) {
+	public List<Vicino> getGoalVicini(Integer goalSelezionato) {
 
-		String sql="select m1.FTHG goalHT, m1.FTAG goalAT , count(*) peso\r\n " + 
-		"				from matches m1\r\n " + 
-		"				where m1.FTHG= ? " + 
-		"				group by goalHT, goalAT ";
+
+		final String sql="select fthg as goal1, ftag as goal2, count(*) cnt " + 
+				"				from matches " + 
+				"				where fthg=? " + 
+				"				group by goal1, goal2 " ;
 		
-		Map<String ,Integer> map= new HashMap<String,Integer>();
+		
+		
+		List<Vicino> result= new ArrayList<>();
+		
 		
 		Connection conn = DBConnect.getConnection();
 
 		try {
 			PreparedStatement st = conn.prepareStatement(sql);
-			st.setInt(1,goalSelezionato);
+			st.setInt(1, goalSelezionato);
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
-				
+
 				int goal1=res.getInt("goal1");
 				int goal2=res.getInt("goal2");
-				int peso=res.getInt("peso");
+				double peso=res.getDouble("cnt");
 				
-				map.put(""+goal1+":" +goal2 ,peso);
+				Vicino v= new Vicino(goal1, goal2, peso);
+				 
+				result.add(v);
+				
 				
 			}
 
 			conn.close();
-		
+			return result;
 		} catch (SQLException e) {
-			throw new RuntimeException("ERRORE DB");
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
 		}
-		return map;
 	}
+
+	
 
 }

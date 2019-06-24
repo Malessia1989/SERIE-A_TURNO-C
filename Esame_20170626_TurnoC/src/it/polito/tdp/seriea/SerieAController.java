@@ -50,7 +50,7 @@ public class SerieAController {
     @FXML
     void doAnalizzaRisultati(ActionEvent event) {
     	txtResult.clear();
-    	model.popolaGrafo();
+    	model.creaGrafo();
     	boxNumeroDiGoal.getItems().addAll(model.getGrafo().vertexSet());
     	
     	
@@ -62,7 +62,7 @@ public class SerieAController {
     	Integer goalSelezionato=boxNumeroDiGoal.getValue();
     	String elencoResult="";
     	if(goalSelezionato !=null) {
-    		elencoResult=model.getElencoRisultati(goalSelezionato);
+    		elencoResult=model.getConnessione(goalSelezionato);
     		txtResult.setText(elencoResult);
     	}
     	else {
